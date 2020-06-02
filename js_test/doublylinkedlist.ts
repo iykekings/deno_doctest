@@ -201,6 +201,7 @@ export class DoublyLinkedList<T> {
    * 
    * @example
    * ```ts
+   * import { DoublyLinkedList } from './js_test/ddublylinkedlist.ts'
    * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
    * const testList = new DoublyLinkedList<number>();
    * for (let data of testArr) {
