@@ -8,11 +8,9 @@ pub struct DocTest {
     imports: std::collections::HashSet<String>,
     // This contains codes in an @example section with their imports removed
     body: Vec<String>,
-    // might need this
-    path: PathBuf,
 }
 
-pub fn extract_jsdoc_examples<T: Into<String>>(input: T, path: PathBuf) -> Option<DocTest> {
+pub fn extract_jsdoc_examples<T: Into<String>>(input: T) -> Option<DocTest> {
     lazy_static! {
       static ref JS_DOC_PATTERN: Regex =
         Regex::new(r"/\*\*\s*\n([^\*]|\*[^/])*\*/").unwrap();
@@ -23,11 +21,11 @@ pub fn extract_jsdoc_examples<T: Into<String>>(input: T, path: PathBuf) -> Optio
       static ref TICKS_OR_IMPORT: Regex = Regex::new(r"(?:import[^(].*)|(?:```\w*)").unwrap();
     }
 
-    let mut docs = DocTest {
-        imports: std::collections::HashSet::new(),
-        body: vec![],
-        path,
-    };
+    // let mut docs = DocTest {
+    let mut import_set = std::collections::HashSet::new();
+    let mut test_bodies = Vec::new();
+
+    // };
     JS_DOC_PATTERN
         .captures_iter(&input.into())
         .filter_map(|caps| caps.get(0).map(|m| m.as_str()))
@@ -42,7 +40,7 @@ pub fn extract_jsdoc_examples<T: Into<String>>(input: T, path: PathBuf) -> Optio
                 .captures_iter(example_section)
                 .filter_map(|caps| caps.get(0).map(|m| m.as_str()))
                 .for_each(|import| {
-                    docs.imports.insert(import.to_string());
+                    import_set.insert(import.to_string());
                 });
 
             let body = TICKS_OR_IMPORT
@@ -61,11 +59,14 @@ pub fn extract_jsdoc_examples<T: Into<String>>(input: T, path: PathBuf) -> Optio
                 })
                 .collect::<Vec<String>>()
                 .join("\n");
-            docs.body.push(body);
+            test_bodies.push(body);
         });
 
-    if docs.body.len() > 0 {
-        Some(docs)
+    if test_bodies.len() > 0 {
+        Some(DocTest {
+            imports: import_set,
+            body: test_bodies,
+        })
     } else {
         None
     }
@@ -115,7 +116,7 @@ pub fn prepare_doctest(path: PathBuf) -> Vec<Option<DocTest>> {
     dirs.iter()
         .map(|dir| {
             let content = std::fs::read_to_string(&dir).expect("Error reading test files");
-            extract_jsdoc_examples(content, dir.to_path_buf())
+            extract_jsdoc_examples(content)
         })
         .collect::<Vec<_>>()
 }
@@ -126,11 +127,27 @@ pub fn render_doctest_to_file(
     quiet: bool,
     filter: Option<String>,
 ) -> String {
-    use std::collections::HashSet;
-
     let mut test_file = "".to_string();
 
-    let all_imports: HashSet<_> = doctests
+    // TODO - discuss with team if this is fine
+    let default_import = "import { 
+      assert,
+      assertArrayContains,
+      assertEquals,
+      assertMatch,
+      assertNotEquals,
+      assertStrContains,
+      assertStrictEq,
+      assertThrows,
+      assertThrowsAsync,
+      equal,
+      unimplemented,
+      unreachable,
+     } from \"https://deno.land/std/testing/asserts.ts\";\n";
+
+    test_file.push_str(default_import);
+
+    let all_imports: String = doctests
         .iter()
         .filter_map(|opt_doctest| {
             opt_doctest
@@ -140,8 +157,8 @@ pub fn render_doctest_to_file(
         .flatten()
         .collect();
 
-    // verify if this line is really line
-    test_file.push_str(&all_imports.into_iter().collect::<String>());
+    test_file.push_str(&all_imports);
+    test_file.push_str("\n");
 
     let all_test_section = doctests
         .iter()
@@ -165,7 +182,7 @@ pub fn render_doctest_to_file(
     };
 
     let run_tests_cmd = format!(
-        "// @ts-ignore\nDeno[Deno.internal].runTests({});\n",
+        "\n// @ts-ignore\nDeno[Deno.internal].runTests({});\n",
         options
     );
 

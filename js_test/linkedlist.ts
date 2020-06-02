@@ -83,7 +83,7 @@ export class LinkedList<T> {
  * @param fn - (data: T, index: number) => T
  * @example
  * ```ts
- * import { Linkedlist } from './js_test/linkedlist.ts'
+ * import { LinkedList } from './js_test/linkedlist.ts'
  * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
  * const testList = new LinkedList<number>();
  * for (let data of testArr) {
@@ -146,7 +146,7 @@ export class LinkedList<T> {
  * @param list - LinkedList<T>
  * @example
  * ```ts
- * import { Linkedlist } from './js_test/linkedlist.ts'
+ * import { LinkedList } from './js_test/linkedlist.ts'
  * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
  * const firstList = new LinkedList<number>();
  * const secondList = new LinkedList<number>();
