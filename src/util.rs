@@ -11,12 +11,13 @@ pub struct DocTest {
 }
 
 struct DocTestBody {
-    value: String,
-    path: PathBuf,
     caption: String,
+    line_number: usize,
+    path: PathBuf,
+    value: String,
 }
 
-fn extract_jsdoc_examples<T: Into<String>>(input: T, p: PathBuf) -> Option<DocTest> {
+fn extract_jsdoc_examples(input: String, p: PathBuf) -> Option<DocTest> {
     lazy_static! {
       static ref JS_DOC_PATTERN: Regex =
         Regex::new(r"/\*\*\s*\n([^\*]|\*[^/])*\*/").unwrap();
@@ -28,18 +29,17 @@ fn extract_jsdoc_examples<T: Into<String>>(input: T, p: PathBuf) -> Option<DocTe
       static ref CAPTION_PATTERN: Regex = Regex::new(r"<caption>([\s\w\W]+)</caption>").unwrap();
     }
 
-    // let mut docs = DocTest {
     let mut import_set = std::collections::HashSet::new();
-    // };
+
     let test_bodies = JS_DOC_PATTERN
-        .captures_iter(&input.into())
-        .filter_map(|caps| caps.get(0).map(|m| m.as_str()))
-        .filter_map(|section| {
+        .captures_iter(&input)
+        .filter_map(|caps| caps.get(0).map(|c| (c.start(), c.as_str())))
+        .filter_map(|(offset, section)| {
             EXAMPLE_PATTERN
                 .captures(section)
-                .and_then(|res| res.get(0).map(|m| m.as_str()))
+                .and_then(|res| res.get(0).map(|m| (offset + m.start(), m.as_str())))
         })
-        .map(|example_section| {
+        .map(|(offset, example_section)| {
             IMPORT_PATTERN
                 .captures_iter(example_section)
                 .filter_map(|caps| caps.get(0).map(|m| m.as_str()))
@@ -50,7 +50,9 @@ fn extract_jsdoc_examples<T: Into<String>>(input: T, p: PathBuf) -> Option<DocTe
             let caption = CAPTION_PATTERN
                 .captures(example_section)
                 .and_then(|cap| cap.get(1).map(|m| m.as_str()))
-                .unwrap_or("uncaptioned");
+                .unwrap_or("");
+
+            let line_number = &input[0..offset].lines().count();
 
             let body = TICKS_OR_IMPORT
                 .replace_all(example_section, "\n")
@@ -66,12 +68,13 @@ fn extract_jsdoc_examples<T: Into<String>>(input: T, p: PathBuf) -> Option<DocTe
                         _ => Some(format!("  {}", res)),
                     }
                 })
-                .collect::<Vec<String>>()
+                .collect::<Vec<_>>()
                 .join("\n");
             DocTestBody {
-                value: body,
                 caption: caption.to_owned(),
+                line_number: line_number.clone(),
                 path: p.clone(),
+                value: body,
             }
         })
         .collect::<Vec<_>>();
@@ -122,16 +125,16 @@ pub fn is_supported(p: &Path) -> bool {
     }
 }
 
-pub fn prepare_doctest(path: PathBuf) -> Vec<Option<DocTest>> {
-    use std::ffi::OsStr;
-
-    let dirs = files_in_subtree(path, |p| match p.extension().and_then(OsStr::to_str) {
-        Some(ext) => (ext == "ts" || ext == "js") && !is_supported(p),
-        _ => false,
+pub fn prepare_doctest(path: PathBuf) -> Vec<DocTest> {
+    let dirs = files_in_subtree(path, |p| {
+        match p.extension().and_then(std::ffi::OsStr::to_str) {
+            Some(ext) => (ext == "ts" || ext == "js") && !is_supported(p),
+            _ => false,
+        }
     });
 
     dirs.iter()
-        .map(|dir| {
+        .filter_map(|dir| {
             let content = std::fs::read_to_string(&dir).expect("Error reading test files");
             extract_jsdoc_examples(content, dir.to_owned())
         })
@@ -139,7 +142,7 @@ pub fn prepare_doctest(path: PathBuf) -> Vec<Option<DocTest>> {
 }
 
 pub fn render_doctest_to_file(
-    doctests: Vec<Option<DocTest>>,
+    doctests: Vec<DocTest>,
     fail_fast: bool,
     quiet: bool,
     filter: Option<String>,
@@ -166,11 +169,7 @@ pub fn render_doctest_to_file(
 
     let all_imports: String = doctests
         .iter()
-        .filter_map(|opt_doctest| {
-            opt_doctest
-                .as_ref()
-                .and_then(|opt| Some(opt.imports.clone()))
-        })
+        .map(|doctest| doctest.imports.clone())
         .flatten()
         .collect();
 
@@ -179,13 +178,14 @@ pub fn render_doctest_to_file(
 
     let all_test_section = doctests
         .into_iter()
-        .filter_map(|opt_doctest| opt_doctest.and_then(|opt| Some(opt.bodies.into_iter())))
+        .map(|doctest| doctest.bodies.into_iter())
         .flatten()
         .map(|test| {
             format!(
-                "Deno.test(\"{} -> {}\", () => {{\n{}\n}});\n",
+                "Deno.test(\"{} -> {} (line {})\", () => {{\n{}\n}});\n",
                 test.path.display(),
                 test.caption,
+                test.line_number,
                 test.value
             )
         })
