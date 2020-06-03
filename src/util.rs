@@ -16,7 +16,7 @@ struct DocTestBody {
     caption: String,
 }
 
-pub fn extract_jsdoc_examples<T: Into<String>>(input: T, p: PathBuf) -> Option<DocTest> {
+fn extract_jsdoc_examples<T: Into<String>>(input: T, p: PathBuf) -> Option<DocTest> {
     lazy_static! {
       static ref JS_DOC_PATTERN: Regex =
         Regex::new(r"/\*\*\s*\n([^\*]|\*[^/])*\*/").unwrap();
@@ -146,7 +146,7 @@ pub fn render_doctest_to_file(
 ) -> String {
     let mut test_file = "".to_string();
 
-    // TODO - discuss with team if this is fine
+    // TODO(iykekings) - discuss with team if this is fine
     let default_import = "import { 
       assert,
       assertArrayContains,
