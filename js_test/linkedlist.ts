@@ -92,6 +92,18 @@ export class LinkedList<T> {
  * testList.map((c: number) => c ** 2);
  * testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
  * ```
+ * 
+ * @example <caption>Linkedlist.map 2</caption>
+ * ```ts
+ * import { LinkedList } from './js_test/linkedlist.ts'
+ * const testArr = [1, 2, 3, 4, 5];
+ * const testList = new LinkedList<number>();
+ * for (let data of testArr) {
+ *  testList.insertNode(data);
+ * }
+ * testList.map((c: number) => c ** 2);
+ * testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
+ * ```
  */
   map(fn: (data: T, index: number) => T) {
     let index = 0;

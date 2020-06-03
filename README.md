@@ -12,3 +12,7 @@ for the tests to be run.
 - Extract the code in the @example section within opening and closing three backticks
 - Extract import statements and remove duplicate imports across tests
 - Extract line number of the @example section
+
+## Goals
+
+- Support multiple examples in one block
