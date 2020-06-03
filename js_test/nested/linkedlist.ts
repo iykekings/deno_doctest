@@ -1,5 +1,5 @@
 type SortFunction<S> = (data1: S, data2: S) => boolean;
-export class LinkedList<T> {
+export class LinkedLists<T> {
   head?: Node<T>;
 
   insertHead(data: T) {
@@ -81,11 +81,11 @@ export class LinkedList<T> {
   /**
  * 
  * @param fn - (data: T, index: number) => T
- * @example <caption>Linkedlist.map</caption>
+ * @example <caption>Linkedlists.map</caption>
  * ```ts
- * import { LinkedList } from './js_test/linkedlist.ts'
+ * import { LinkedLists } from './js_test/nested/linkedlist.ts'
  * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
- * const testList = new LinkedList<number>();
+ * const testList = new LinkedLists<number>();
  * for (let data of testArr) {
  *  testList.insertNode(data);
  * }
@@ -144,12 +144,12 @@ export class LinkedList<T> {
   /**
  * 
  * @param list - LinkedList<T>
- * @example <caption>Linkedlists.compareWith</caption>
+ * @example <caption>Linkedlist.compareWith</caption>
  * ```ts
- * import { LinkedList } from './js_test/linkedlist.ts'
+ * import { LinkedLists } from './js_test/nested/linkedlist.ts'
  * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
- * const firstList = new LinkedList<number>();
- * const secondList = new LinkedList<number>();
+ * const firstList = new LinkedLists<number>();
+ * const secondList = new LinkedLists<number>();
  * for (let data of testArr) {
  *   firstList.insertNode(data);
  *   secondList.insertNode(data);
@@ -159,7 +159,7 @@ export class LinkedList<T> {
  * ```
  * @returns boolean
  */
-  compareWith(list: LinkedList<T>): boolean {
+  compareWith(list: LinkedLists<T>): boolean {
     let current1 = this.head;
     let current2 = list.head;
     while (current1 && current2) {

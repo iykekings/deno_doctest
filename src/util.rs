@@ -7,26 +7,31 @@ pub struct DocTest {
     // This removes repetition of imports in a file
     imports: std::collections::HashSet<String>,
     // This contains codes in an @example section with their imports removed
-    body: Vec<String>,
+    bodies: Vec<DocTestBody>,
 }
 
-pub fn extract_jsdoc_examples<T: Into<String>>(input: T) -> Option<DocTest> {
+struct DocTestBody {
+    value: String,
+    path: PathBuf,
+    caption: String,
+}
+
+pub fn extract_jsdoc_examples<T: Into<String>>(input: T, p: PathBuf) -> Option<DocTest> {
     lazy_static! {
       static ref JS_DOC_PATTERN: Regex =
         Regex::new(r"/\*\*\s*\n([^\*]|\*[^/])*\*/").unwrap();
       // IMPORT_PATTERN doesn't match dynamic imports
       static ref IMPORT_PATTERN: Regex =
         Regex::new(r"import[^(].*\n").unwrap();
-      static ref EXAMPLE_PATTERN: Regex = Regex::new(r"@example\s*\n(?:\s*\*\s*\n*)*```\w*\n([^\*]|\*\s*[^/])*```\n").unwrap();
+      static ref EXAMPLE_PATTERN: Regex = Regex::new(r"@example\s*[\w\W]*\n(?:\s*\*\s*\n*)*```\w*\n([^\*]|\*\s*[^/])*```\n").unwrap();
       static ref TICKS_OR_IMPORT: Regex = Regex::new(r"(?:import[^(].*)|(?:```\w*)").unwrap();
+      static ref CAPTION_PATTERN: Regex = Regex::new(r"<caption>([\s\w\W]+)</caption>").unwrap();
     }
 
     // let mut docs = DocTest {
     let mut import_set = std::collections::HashSet::new();
-    let mut test_bodies = Vec::new();
-
     // };
-    JS_DOC_PATTERN
+    let test_bodies = JS_DOC_PATTERN
         .captures_iter(&input.into())
         .filter_map(|caps| caps.get(0).map(|m| m.as_str()))
         .filter_map(|section| {
@@ -34,14 +39,18 @@ pub fn extract_jsdoc_examples<T: Into<String>>(input: T) -> Option<DocTest> {
                 .captures(section)
                 .and_then(|res| res.get(0).map(|m| m.as_str()))
         })
-        .for_each(|example_section| {
-            // imports
+        .map(|example_section| {
             IMPORT_PATTERN
                 .captures_iter(example_section)
                 .filter_map(|caps| caps.get(0).map(|m| m.as_str()))
                 .for_each(|import| {
                     import_set.insert(import.to_string());
                 });
+
+            let caption = CAPTION_PATTERN
+                .captures(example_section)
+                .and_then(|cap| cap.get(1).map(|m| m.as_str()))
+                .unwrap_or("uncaptioned");
 
             let body = TICKS_OR_IMPORT
                 .replace_all(example_section, "\n")
@@ -59,16 +68,20 @@ pub fn extract_jsdoc_examples<T: Into<String>>(input: T) -> Option<DocTest> {
                 })
                 .collect::<Vec<String>>()
                 .join("\n");
-            test_bodies.push(body);
-        });
-
-    if test_bodies.len() > 0 {
-        Some(DocTest {
-            imports: import_set,
-            body: test_bodies,
+            DocTestBody {
+                value: body,
+                caption: caption.to_owned(),
+                path: p.clone(),
+            }
         })
-    } else {
-        None
+        .collect::<Vec<_>>();
+
+    match test_bodies.len() {
+        0 => None,
+        _ => Some(DocTest {
+            imports: import_set,
+            bodies: test_bodies,
+        }),
     }
 }
 
@@ -88,7 +101,6 @@ where
 }
 
 // from deno -> cli::test_runner
-// TODO(iykekings) provide an adaptaton for doctest -> currently using an inversion of this but not sufficient
 pub fn is_supported(p: &Path) -> bool {
     use std::path::Component;
     if let Some(Component::Normal(basename_os_str)) = p.components().next_back() {
@@ -111,12 +123,17 @@ pub fn is_supported(p: &Path) -> bool {
 }
 
 pub fn prepare_doctest(path: PathBuf) -> Vec<Option<DocTest>> {
-    let dirs = files_in_subtree(path, |p| !is_supported(p));
+    use std::ffi::OsStr;
+
+    let dirs = files_in_subtree(path, |p| match p.extension().and_then(OsStr::to_str) {
+        Some(ext) => (ext == "ts" || ext == "js") && !is_supported(p),
+        _ => false,
+    });
 
     dirs.iter()
         .map(|dir| {
             let content = std::fs::read_to_string(&dir).expect("Error reading test files");
-            extract_jsdoc_examples(content)
+            extract_jsdoc_examples(content, dir.to_owned())
         })
         .collect::<Vec<_>>()
 }
@@ -161,15 +178,17 @@ pub fn render_doctest_to_file(
     test_file.push_str("\n");
 
     let all_test_section = doctests
-        .iter()
-        .filter_map(|opt_doctest| {
-            opt_doctest
-                .as_ref()
-                .and_then(|opt| Some(opt.body.clone().into_iter()))
-        })
+        .into_iter()
+        .filter_map(|opt_doctest| opt_doctest.and_then(|opt| Some(opt.bodies.into_iter())))
         .flatten()
-        .enumerate()
-        .map(|(i, test)| format!("Deno.test(\"doctest {}\", () => {{\n{}\n}});\n", i, test))
+        .map(|test| {
+            format!(
+                "Deno.test(\"{} -> {}\", () => {{\n{}\n}});\n",
+                test.path.display(),
+                test.caption,
+                test.value
+            )
+        })
         .collect::<Vec<_>>()
         .join("\n");
 
