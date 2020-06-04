@@ -24,7 +24,7 @@ fn extract_jsdoc_examples(input: String, p: PathBuf) -> Option<DocTest> {
       // IMPORT_PATTERN doesn't match dynamic imports
       static ref IMPORT_PATTERN: Regex =
         Regex::new(r"import[^(].*\n").unwrap();
-      static ref EXAMPLE_PATTERN: Regex = Regex::new(r"@example\s*[\w\W]*\n(?:\s*\*\s*\n*)*```\w*\n([^\*]|\*\s*[^/])*```\n").unwrap();
+      static ref EXAMPLE_PATTERN: Regex = Regex::new(r"@example\s*(?:<\w+>.*</\w+>)*\n(?:\s*\*\s*\n*)*```").unwrap();
       static ref TICKS_OR_IMPORT: Regex = Regex::new(r"(?:import[^(].*)|(?:```\w*)").unwrap();
       static ref CAPTION_PATTERN: Regex = Regex::new(r"<caption>([\s\w\W]+)</caption>").unwrap();
     }
@@ -34,28 +34,33 @@ fn extract_jsdoc_examples(input: String, p: PathBuf) -> Option<DocTest> {
     let test_bodies = JS_DOC_PATTERN
         .captures_iter(&input)
         .filter_map(|caps| caps.get(0).map(|c| (c.start(), c.as_str())))
-        .filter_map(|(offset, section)| {
-            EXAMPLE_PATTERN
-                .captures(section)
-                .and_then(|res| res.get(0).map(|m| (offset + m.start(), m.as_str())))
+        .flat_map(|(offset, section)| {
+            EXAMPLE_PATTERN.find_iter(section).filter_map(move |cap| {
+                section[cap.end()..].find("```").map(|i| {
+                    (
+                        offset + cap.end(),
+                        section[cap.start()..i + cap.end()].to_string(),
+                    )
+                })
+            })
         })
         .map(|(offset, example_section)| {
             IMPORT_PATTERN
-                .captures_iter(example_section)
+                .captures_iter(&example_section)
                 .filter_map(|caps| caps.get(0).map(|m| m.as_str()))
                 .for_each(|import| {
                     import_set.insert(import.to_string());
                 });
 
             let caption = CAPTION_PATTERN
-                .captures(example_section)
+                .captures(&example_section)
                 .and_then(|cap| cap.get(1).map(|m| m.as_str()))
                 .unwrap_or("");
 
             let line_number = &input[0..offset].lines().count();
 
             let body = TICKS_OR_IMPORT
-                .replace_all(example_section, "\n")
+                .replace_all(&example_section, "\n")
                 .lines()
                 .skip(1)
                 .filter_map(|line| {
