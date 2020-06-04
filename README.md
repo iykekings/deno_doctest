@@ -13,5 +13,6 @@ for the tests to be run.
 - Extract import statements and remove duplicate imports across tests
 - Extract line number of the @example section
 - Support multiple examples in one block
-
-## Goals
+- doc can be ignored from testing, by adding ignore to the opening three backticks (eg. ```ignore)
+- doc can be skipped from testing, by adding text to the opening three backticks (eg. ```text)
+- If doc contains `await` keyword, generated test will be automatically wrapped with async fn

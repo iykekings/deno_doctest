@@ -17,7 +17,10 @@ import { LinkedList } from './js_test/linkedlist.ts'
 import { LinkedLists } from './js_test/nested/linkedlist.ts'
 import { DoublyLinkedListJs } from './js_test/nested/nested/doublylinkedlist.js'
 
-Deno.test("js_test/doublylinkedlist.ts ->  (line 203)", () => {
+Deno.test({
+	name: "js_test/doublylinkedlist.ts ->  (line 203)",
+	ignore: false,
+	fn() {
   const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
   const testList = new DoublyLinkedList<number>();
   for (let data of testArr) {
@@ -25,9 +28,13 @@ Deno.test("js_test/doublylinkedlist.ts ->  (line 203)", () => {
   }
   testList.map((c: number) => c ** 2);
   testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
+}
 });
 
-Deno.test("js_test/linkedlist.ts -> Linkedlist.map (line 85)", () => {
+Deno.test({
+	name: "js_test/linkedlist.ts -> Linkedlist.map (line 85)",
+	ignore: false,
+	fn() {
   const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
   const testList = new LinkedList<number>();
   for (let data of testArr) {
@@ -35,9 +42,13 @@ Deno.test("js_test/linkedlist.ts -> Linkedlist.map (line 85)", () => {
   }
   testList.map((c: number) => c ** 2);
   testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
+}
 });
 
-Deno.test("js_test/linkedlist.ts -> Linkedlist.map 2 (line 97)", () => {
+Deno.test({
+	name: "js_test/linkedlist.ts -> Linkedlist.map 2 (line 97)",
+	ignore: false,
+	fn() {
   const testArr = [1, 2, 3, 4, 5];
   const testList = new LinkedList<number>();
   for (let data of testArr) {
@@ -45,9 +56,13 @@ Deno.test("js_test/linkedlist.ts -> Linkedlist.map 2 (line 97)", () => {
   }
   testList.map((c: number) => c ** 2);
   testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
+}
 });
 
-Deno.test("js_test/linkedlist.ts -> Linkedlists.compareWith (line 160)", () => {
+Deno.test({
+	name: "js_test/linkedlist.ts -> Linkedlists.compareWith (line 160)",
+	ignore: false,
+	fn() {
   const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
   const firstList = new LinkedList<number>();
   const secondList = new LinkedList<number>();
@@ -57,9 +72,13 @@ Deno.test("js_test/linkedlist.ts -> Linkedlists.compareWith (line 160)", () => {
   }
   const result = firstList.compareWith(secondList);
   assert(result);
+}
 });
 
-Deno.test("js_test/nested/linkedlist.ts -> Linkedlists.map (line 85)", () => {
+Deno.test({
+	name: "js_test/nested/linkedlist.ts -> Linkedlists.map (line 85)",
+	ignore: false,
+	fn() {
   const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
   const testList = new LinkedLists<number>();
   for (let data of testArr) {
@@ -67,9 +86,13 @@ Deno.test("js_test/nested/linkedlist.ts -> Linkedlists.map (line 85)", () => {
   }
   testList.map((c: number) => c ** 2);
   testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
+}
 });
 
-Deno.test("js_test/nested/linkedlist.ts -> Linkedlist.compareWith (line 148)", () => {
+Deno.test({
+	name: "js_test/nested/linkedlist.ts -> Linkedlist.compareWith (line 148)",
+	ignore: false,
+	async fn() {
   const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
   const firstList = new LinkedLists<number>();
   const secondList = new LinkedLists<number>();
@@ -77,11 +100,15 @@ Deno.test("js_test/nested/linkedlist.ts -> Linkedlist.compareWith (line 148)", (
   firstList.insertNode(data);
   secondList.insertNode(data);
   }
-  const result = firstList.compareWith(secondList);
+  const result = await firstList.compareWith(secondList);
   assert(result);
+}
 });
 
-Deno.test("js_test/nested/nested/doublylinkedlist.js -> DoublyLinkedList.map (line 192)", () => {
+Deno.test({
+	name: "js_test/nested/nested/doublylinkedlist.js -> DoublyLinkedList.map (line 192)",
+	ignore: false,
+	fn() {
   const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
   const testList = new DoublyLinkedListJs();
   for (let data of testArr) {
@@ -89,6 +116,7 @@ Deno.test("js_test/nested/nested/doublylinkedlist.js -> DoublyLinkedList.map (li
   }
   testList.map((c: number) => c ** 2);
   testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
+}
 });
 
 // @ts-ignore

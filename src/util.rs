@@ -15,6 +15,8 @@ struct DocTestBody {
     line_number: usize,
     path: PathBuf,
     value: String,
+    ignore: bool,
+    is_async: bool,
 }
 
 fn extract_jsdoc_examples(input: String, p: PathBuf) -> Option<DocTest> {
@@ -27,6 +29,8 @@ fn extract_jsdoc_examples(input: String, p: PathBuf) -> Option<DocTest> {
       static ref EXAMPLE_PATTERN: Regex = Regex::new(r"@example\s*(?:<\w+>.*</\w+>)*\n(?:\s*\*\s*\n*)*```").unwrap();
       static ref TICKS_OR_IMPORT: Regex = Regex::new(r"(?:import[^(].*)|(?:```\w*)").unwrap();
       static ref CAPTION_PATTERN: Regex = Regex::new(r"<caption>([\s\w\W]+)</caption>").unwrap();
+      static ref TEST_TAG_PATTERN: Regex = Regex::new(r"@example\s*(?:<\w+>.*</\w+>)*\n(?:\s*\*\s*\n*)*```(\w+)").unwrap();
+      static ref AWAIT_PATTERN: Regex = Regex::new(r"\Wawait\s").unwrap();
     }
 
     let mut import_set = std::collections::HashSet::new();
@@ -44,7 +48,15 @@ fn extract_jsdoc_examples(input: String, p: PathBuf) -> Option<DocTest> {
                 })
             })
         })
-        .map(|(offset, example_section)| {
+        .filter_map(|(offset, example_section)| {
+            let test_tag = TEST_TAG_PATTERN
+                .captures(&example_section)
+                .and_then(|m| m.get(1).map(|c| c.as_str()));
+
+            if test_tag == Some("text") {
+                return None;
+            }
+
             IMPORT_PATTERN
                 .captures_iter(&example_section)
                 .filter_map(|caps| caps.get(0).map(|m| m.as_str()))
@@ -75,12 +87,18 @@ fn extract_jsdoc_examples(input: String, p: PathBuf) -> Option<DocTest> {
                 })
                 .collect::<Vec<_>>()
                 .join("\n");
-            DocTestBody {
+            let is_async = match AWAIT_PATTERN.find(&example_section) {
+                Some(_) => true,
+                _ => false,
+            };
+            Some(DocTestBody {
                 caption: caption.to_owned(),
                 line_number: line_number.clone(),
                 path: p.clone(),
                 value: body,
-            }
+                ignore: test_tag == Some("ignore"),
+                is_async,
+            })
         })
         .collect::<Vec<_>>();
 
@@ -186,11 +204,14 @@ pub fn render_doctest_to_file(
         .map(|doctest| doctest.bodies.into_iter())
         .flatten()
         .map(|test| {
+            let async_str = if test.is_async {"async "} else {""};
             format!(
-                "Deno.test(\"{} -> {} (line {})\", () => {{\n{}\n}});\n",
+                "Deno.test({{\n\tname: \"{} -> {} (line {})\",\n\tignore: {},\n\t{}fn() {{\n{}\n}}\n}});\n",
                 test.path.display(),
                 test.caption,
                 test.line_number,
+                test.ignore,
+                async_str,
                 test.value
             )
         })

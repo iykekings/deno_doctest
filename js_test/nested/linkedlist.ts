@@ -145,7 +145,7 @@ export class LinkedLists<T> {
  * 
  * @param list - LinkedList<T>
  * @example <caption>Linkedlist.compareWith</caption>
- * ```ts
+ * ```
  * import { LinkedLists } from './js_test/nested/linkedlist.ts'
  * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
  * const firstList = new LinkedLists<number>();
@@ -154,7 +154,7 @@ export class LinkedLists<T> {
  *   firstList.insertNode(data);
  *   secondList.insertNode(data);
  * }
- * const result = firstList.compareWith(secondList);
+ * const result = await firstList.compareWith(secondList);
  * assert(result);
  * ```
  * @returns boolean
