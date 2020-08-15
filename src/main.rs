@@ -1,9 +1,6 @@
 #[macro_use]
 extern crate lazy_static;
 
-// #[macro_use]
-// extern crate serde_json;
-
 mod cli;
 mod util;
 
@@ -15,7 +12,7 @@ use structopt::StructOpt;
 /// Doesn't do anything in this case without --test
 /// Ikechukwu Eze <iykekings36@gmail.com>
 #[derive(StructOpt, Debug)]
-#[structopt(name = "denodoc")]
+#[structopt(name = "deno_doctest")]
 pub struct Opt {
     /// Runs test on JSDoc documentation Tests are run on
     /// code snippets in @example block

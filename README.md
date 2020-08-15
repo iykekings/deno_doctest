@@ -16,15 +16,16 @@ Proposal on how deno doctest will work
 
 ## To use
 
-- Build
+- Install
 
-  `cargo build --release`
+  `cargo install --path .`
 
 - Run
 
-  `./target/release/deno_doctest --test <File|Dir>[]`
+  `deno_doctest --test <File|Dir>[]`
+
   eg.
-  `./target/release/deno_doctest --test js_test/nested js_test/linkedlist.ts`
+  `deno_doctest --test js_test/nested js_test/linkedlist.ts`
 
 ## Notes
 
