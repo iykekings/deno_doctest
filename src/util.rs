@@ -1,12 +1,13 @@
 use regex::Regex;
 use walkdir::WalkDir;
 
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
 pub struct DocTest {
     // This removes repetition of imports in a file
     imports: std::collections::HashSet<String>,
-    // This contains codes in an @example section with their imports removed
+    // This contains codes in an @example section with their imports stripped
     bodies: Vec<DocTestBody>,
 }
 
@@ -148,15 +149,26 @@ pub fn is_supported(p: &Path) -> bool {
     }
 }
 
-pub fn prepare_doctest(path: PathBuf) -> Vec<DocTest> {
-    let dirs = files_in_subtree(path, |p| {
-        match p.extension().and_then(std::ffi::OsStr::to_str) {
-            Some(ext) => (ext == "ts" || ext == "js") && !is_supported(p),
-            _ => false,
-        }
-    });
+pub fn prepare_doctest(paths: Vec<PathBuf>) -> Vec<DocTest> {
+    let mut prepared = vec![];
 
-    dirs.iter()
+    for p in paths {
+        if p.is_dir() {
+            let test_files = files_in_subtree(p, |p| {
+                let valid_ext = ["ts", "tsx", "js", "jsx"];
+                p.extension()
+                    .and_then(OsStr::to_str)
+                    .map(|ext| valid_ext.contains(&ext) && !is_supported(p))
+                    .unwrap_or(false)
+            });
+            prepared.extend(test_files);
+        } else {
+            prepared.push(p);
+        }
+    }
+
+    prepared
+        .iter()
         .filter_map(|dir| {
             let content = std::fs::read_to_string(&dir).expect("Error reading test files");
             extract_jsdoc_examples(content, dir.to_owned())
@@ -166,27 +178,26 @@ pub fn prepare_doctest(path: PathBuf) -> Vec<DocTest> {
 
 pub fn render_doctest_to_file(
     doctests: Vec<DocTest>,
-    fail_fast: bool,
-    quiet: bool,
-    filter: Option<String>,
+    // fail_fast: bool,
+    // quiet: bool,
+    // filter: Option<String>,
 ) -> String {
     let mut test_file = "".to_string();
 
-    // TODO(iykekings) - discuss with team if this is fine
     let default_import = "import { 
-      assert,
-      assertArrayContains,
-      assertEquals,
-      assertMatch,
-      assertNotEquals,
-      assertStrContains,
-      assertStrictEq,
-      assertThrows,
-      assertThrowsAsync,
-      equal,
-      unimplemented,
-      unreachable,
-     } from \"https://deno.land/std/testing/asserts.ts\";\n";
+        equal,
+        assert,
+        assertEquals,
+        assertNotEquals,
+        assertStrictEquals,
+        assertStringContains,
+        assertArrayContains,
+        assertMatch,
+        fail,
+        assertThrows,
+        unimplemented,
+        unreachable
+     } from \"https://deno.land/std@0.65.0/testing/asserts.ts\";\n";
 
     test_file.push_str(default_import);
 
@@ -220,18 +231,18 @@ pub fn render_doctest_to_file(
 
     test_file.push_str(&all_test_section);
 
-    let options = if let Some(filter) = filter {
-        json!({ "failFast": fail_fast, "reportToConsole": !quiet, "disableLog": quiet, "filter": filter })
-    } else {
-        json!({ "failFast": fail_fast, "reportToConsole": !quiet, "disableLog": quiet })
-    };
+    // let options = if let Some(filter) = filter {
+    //     json!({ "failFast": fail_fast, "reportToConsole": !quiet, "disableLog": quiet, "filter": filter })
+    // } else {
+    //     json!({ "failFast": fail_fast, "reportToConsole": !quiet, "disableLog": quiet })
+    // };
 
-    let run_tests_cmd = format!(
-        "\n// @ts-ignore\nDeno[Deno.internal].runTests({});\n",
-        options
-    );
+    // let run_tests_cmd = format!(
+    //     "\n// @ts-ignore\nDeno[Deno.internal].runTests({});\n",
+    //     options
+    // );
 
-    test_file.push_str(&run_tests_cmd);
+    // test_file.push_str(&run_tests_cmd);
 
     test_file
 }

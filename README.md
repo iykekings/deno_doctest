@@ -16,3 +16,13 @@ for the tests to be run.
 - doc can be ignored from testing, by adding ignore to the opening three backticks (eg. ```ignore)
 - doc can be skipped from testing, by adding text to the opening three backticks (eg. ```text)
 - If doc contains `await` keyword, generated test will be automatically wrapped with async fn
+
+## To use
+
+- Build
+
+  `cargo build --release`
+
+- Run
+
+  `./target/release/deno_doctest --test <File|Dir>`

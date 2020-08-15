@@ -1,11 +1,15 @@
-// #[macro_use]
-// extern crate lazy_static;
+#[macro_use]
+extern crate lazy_static;
 
 // #[macro_use]
 // extern crate serde_json;
 
 mod cli;
+mod util;
+
 use std::path::PathBuf;
+use std::process::Command;
+
 use structopt::StructOpt;
 /// Namespace for deno doc command
 /// Doesn't do anything in this case without --test
@@ -23,12 +27,15 @@ pub struct Opt {
     files: Vec<PathBuf>,
 }
 
-fn main() {
-    // let cwd = std::path::PathBuf::from("js_test");
-    // let res = util::prepare_doctest(cwd);
-    // let file = util::render_doctest_to_file(res, true, true, None);
-    // // write to file for manual test
-    // std::fs::write(".deno_doctest.ts", &file).expect("Couldn't write file");
+fn main() -> std::io::Result<()> {
     let opt = Opt::from_args();
-    println!("{:#?}", opt);
+    let res = util::prepare_doctest(opt.files);
+    let file = util::render_doctest_to_file(res);
+    std::fs::write(".deno_doctest.ts", &file).expect("Couldn't write file");
+    Command::new("deno")
+        .arg("test")
+        .arg(".deno_doctest.ts")
+        .status()?;
+    std::fs::remove_file(".deno_doctest.ts")?;
+    Ok(())
 }
