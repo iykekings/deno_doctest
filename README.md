@@ -35,6 +35,10 @@ Proposal on how deno doctest will work
 
 `cargo test`
 
+## Todo
+
+- Switch JSDoc parsing from Regex to swc [#4](https://github.com/iykekings/deno_doctest/issues/4)
+
 ## Example
 
 ![Terminal screenshot](./screenshot.png)
