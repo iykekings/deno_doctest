@@ -1,9 +1,6 @@
 # deno_doctest
 
-proposal on how deno doctest will work
-
-.deno_doctest.ts is sample file generated that will be plugged in to deno runtime
-for the tests to be run.
+Proposal on how deno doctest will work
 
 - Currently: It can
 - Extract JsDoc comments
@@ -25,4 +22,18 @@ for the tests to be run.
 
 - Run
 
-  `./target/release/deno_doctest --test <File|Dir>`
+  `./target/release/deno_doctest --test <File|Dir>[]`
+  eg.
+  `./target/release/deno_doctest --test js_test/nested js_test/linkedlist.ts`
+
+## Notes
+
+- In Deno reading files is done using deno_core::ModuleSpecifier but here std::file::read_to_string is used for testing
+
+## Test
+
+`cargo test`
+
+## Example
+
+![Terminal screenshot](./screenshot.png)
