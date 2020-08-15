@@ -78,8 +78,7 @@ export class LinkedList<T> {
     }
   }
 
-  /**
- * 
+  /*
  * @param fn - (data: T, index: number) => T
  * @example <caption>Linkedlist.map</caption>
  * ```ts
