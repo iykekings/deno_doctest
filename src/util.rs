@@ -1,6 +1,7 @@
 use regex::Regex;
 use walkdir::WalkDir;
 
+use jsdoc::{parse, Input};
 use std::ffi::OsStr;
 use std::{
     collections::HashSet,
@@ -249,6 +250,47 @@ fn get_code_from_example(ex: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+// Using jsdoc 0.1.0
+pub fn new_parse() {
+    use swc_common::BytePos;
+
+    let file = std::fs::read_to_string("./js_test/linkedlist.ts").expect("couldn't read file");
+    let _test = r#"/**
+    * 
+    * @param list - LinkedList<T>
+    * @example 
+    * <caption>Linkedlists.compareWith</caption>
+    * import { LinkedList } from './js_test/linkedlist.ts'
+    * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
+    * const firstList = new LinkedList<number>();
+    * const secondList = new LinkedList<number>();
+    * for (let data of testArr) {
+    *   firstList.insertNode(data);
+    *   secondList.insertNode(data);
+    * }
+    * const result = firstList.compareWith(secondList);
+    * assert(result);
+    * @returns boolean
+    */
+     compareWith(list: LinkedList<T>): boolean {
+       let current1 = this.head;
+       let current2 = list.head;
+       while (current1 && current2) {
+         if (current1.data !== current2.data) return false;
+         if (current1.next && !current2.next && !current1.next && current2.next) {
+           return false;
+         }
+         current1 = current1.next;
+         current2 = current2.next;
+       }
+       return true;
+     }"#;
+
+    let input = Input::new(BytePos(0), BytePos((file.len() - 1) as u32), &file);
+    let parsed = jsdoc::parse(input).expect("Failed");
+    eprintln!("{:#?}", parsed.1);
 }
 
 #[cfg(test)]

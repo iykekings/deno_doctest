@@ -78,32 +78,32 @@ export class LinkedList<T> {
     }
   }
 
-  /*
- * @param fn - (data: T, index: number) => T
- * @example <caption>Linkedlist.map</caption>
- * ```ts
- * import { LinkedList } from './js_test/linkedlist.ts'
- * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
- * const testList = new LinkedList<number>();
- * for (let data of testArr) {
- *  testList.insertNode(data);
- * }
- * testList.map((c: number) => c ** 2);
- * testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
- * ```
- * 
- * @example <caption>Linkedlist.map 2</caption>
- * ```ts
- * import { LinkedList } from './js_test/linkedlist.ts'
- * const testArr = [1, 2, 3, 4, 5];
- * const testList = new LinkedList<number>();
- * for (let data of testArr) {
- *  testList.insertNode(data);
- * }
- * testList.map((c: number) => c ** 2);
- * testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
- * ```
- */
+  /**
+   * @param fn - (data: T, index: number) => T
+   * @example <caption>Linkedlist.map</caption>
+   * ```ts
+   * import { LinkedList } from './js_test/linkedlist.ts'
+   * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
+   * const testList = new LinkedList<number>();
+   * for (let data of testArr) {
+   *  testList.insertNode(data);
+   * }
+   * testList.map((c: number) => c ** 2);
+   * testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
+   * ```
+   *
+   * @example <caption>Linkedlist.map 2</caption>
+   * ```ts
+   * import { LinkedList } from './js_test/linkedlist.ts'
+   * const testArr = [1, 2, 3, 4, 5];
+   * const testList = new LinkedList<number>();
+   * for (let data of testArr) {
+   *  testList.insertNode(data);
+   * }
+   * testList.map((c: number) => c ** 2);
+   * testList.forEach((c: number, i: number) => assertEquals(c, testArr[i] ** 2));
+   * ```
+   */
   map(fn: (data: T, index: number) => T) {
     let index = 0;
     let current = this.head;
@@ -153,23 +153,23 @@ export class LinkedList<T> {
   }
 
   /**
- * 
- * @param list - LinkedList<T>
- * @example <caption>Linkedlists.compareWith</caption>
- * ```ts
- * import { LinkedList } from './js_test/linkedlist.ts'
- * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
- * const firstList = new LinkedList<number>();
- * const secondList = new LinkedList<number>();
- * for (let data of testArr) {
- *   firstList.insertNode(data);
- *   secondList.insertNode(data);
- * }
- * const result = firstList.compareWith(secondList);
- * assert(result);
- * ```
- * @returns boolean
- */
+   *
+   * @param list - LinkedList<T>
+   * @example <caption>Linkedlists.compareWith</caption>
+   * ```ts
+   * import { LinkedList } from './js_test/linkedlist.ts'
+   * const testArr = [1, 2, 3, 4, 5, 6, 78, 9, 0, 65];
+   * const firstList = new LinkedList<number>();
+   * const secondList = new LinkedList<number>();
+   * for (let data of testArr) {
+   *   firstList.insertNode(data);
+   *   secondList.insertNode(data);
+   * }
+   * const result = firstList.compareWith(secondList);
+   * assert(result);
+   * ```
+   * @returns boolean
+   */
   compareWith(list: LinkedList<T>): boolean {
     let current1 = this.head;
     let current2 = list.head;
