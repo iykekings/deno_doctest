@@ -2,7 +2,7 @@
  * Helps in running tests
  *
  * @export
- * @class Test ✅
+ * @class Test
  * @example
  * import { Test } from './test.ts';
  * const test = new Test();
@@ -12,7 +12,7 @@ export class Test {
   /**
    * gives back 4
    * @returns {number}
-   * @memberof Test ✅
+   * @memberof Test
    * @example
    * import { Test } from './test.ts';
    * let t = new Test();
@@ -25,7 +25,7 @@ export class Test {
   /**
    * gives back 4
    * @returns {number}
-   * @memberof Test ✅
+   * @memberof Test
    * @example
    * import { Test } from './test.ts';
    * let t = new Test();
@@ -40,17 +40,43 @@ export class Test {
  * Helps in running another tests
  *
  * @export
- * @class AnotherTest ✅
+ * @class AnotherTest
  * @example
  * import { AnotherTest } from './test.ts';
  * const test = new AnotherTest();
  * console.log('test works)
  */
-class AnotherTest {}
+class AnotherTest {
+  /**
+   * gives back 4
+   * @returns {number}
+   * @memberof AnotherTest
+   * @example
+   * import { AnotherTest } from './test.ts';
+   * let t = new AnotherTest();
+   * assert.assertEquals(t.test(), 4);
+   */
+  test(): number {
+    return 2 + 2;
+  }
+
+  /**
+   * gives back 4
+   * @returns {number}
+   * @memberof AnotherTest
+   * @example
+   * import { AnotherTest } from './test.ts';
+   * let t = new AnotherTest();
+   * assert.assertEquals(t.test2(), 4);
+   */
+  test2(): number {
+    return 2 + 2;
+  }
+}
 
 /**
  * function test
- * @function funcTest ✅
+ * @function funcTest
  * @example
  * import { funcTest } from './test.ts';
  * const test = funcTest();
@@ -60,7 +86,7 @@ function funcTest() {}
 
 /**
  * function test
- * @function funcTestEx ✅
+ * @function funcTestEx
  * @example
  * import { funcTestEx } from './test.ts';
  * const test = funcTestEx();
@@ -119,3 +145,8 @@ export const ExportedObjectWithMethods = {
     return 'Enugu';
   },
 };
+/**
+ * arrow
+ * just for testing
+ */
+const arrow = () => console.log('test');
